@@ -2,6 +2,8 @@ import asyncio
 import logging
 
 from aiogram import Bot, Dispatcher
+from aiogram.types import Message
+from aiogram.filters import Command
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from config_data.config import Config, load_config
@@ -52,6 +54,8 @@ async def main():
     # Настраиваем главное меню бота
     await set_main_menu(bot)
 
+    dp.startup.register(set_main_menu)
+
     # Регистриуем роутеры
     logger.info("Подключаем роутеры")
     # ...
@@ -59,6 +63,11 @@ async def main():
     # Регистрируем миддлвари
     logger.info("Подключаем миддлвари")
     # ...
+
+    @dp.message(Command(commands="delmenu"))
+    async def del_main_menu(message: Message, bot: Bot):
+        await bot.delete_my_commands()
+        await message.answer(text='Кнопка "Menu" удалена')
 
     # Пропускаем накопившиеся апдейты и запускаем polling
     await bot.delete_webhook(drop_pending_updates=True)
