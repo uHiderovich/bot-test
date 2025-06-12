@@ -1,7 +1,7 @@
 import os
 import sys
 
-BOOK_PATH = "book/book.txt"
+BOOK_PATH = "book/Bredberi_Marsianskie-hroniki.txt"
 PAGE_SIZE = 1050
 
 book: dict[int, str] = {}
@@ -38,7 +38,16 @@ def _get_part_text(text: str, start: int, size: int) -> tuple[str, int]:
 
 # Функция, формирующая словарь книги
 def prepare_book(path: str) -> None:
-    pass
+    with open(path, encoding="utf-8") as f:
+        text = f.read()
+
+        current_index = 0
+        current_line_number = 1
+        while current_index < len(text):
+            cut, cut_len = _get_part_text(text, current_index, PAGE_SIZE)
+            current_index += cut_len
+            book[current_line_number] = cut.lstrip()
+            current_line_number += 1
 
 
 # Вызов функции prepare_book для подготовки книги из текстового файла

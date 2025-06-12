@@ -65,3 +65,5 @@ docs/html
 .python-version
 
 .env
+
+.DS_Store
