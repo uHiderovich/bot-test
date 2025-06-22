@@ -2,67 +2,72 @@ import asyncio
 import logging
 
 from aiogram import Bot, Dispatcher
-from aiogram.client.default import DefaultBotProperties
-from aiogram.enums import ParseMode
 from config_data.config import Config, load_config
+from handlers.other import other_router
+from handlers.user import user_router
+from middlewares.i18n import TranslatorMiddleware
+from middlewares.inner import (
+    FirstInnerMiddleware,
+    SecondInnerMiddleware,
+    ThirdInnerMiddleware,
+)
+from middlewares.outer import (
+    FirstOuterMiddleware,
+    SecondOuterMiddleware,
+    ThirdOuterMiddleware,
+)
+from middlewares.throttling import ThrottlingMiddleware
 
-# Импортируем роутеры
-# ...
-# Импортируем миддлвари
-# ...
-# Импортируем вспомогательные функции для создания нужных объектов
-# ...
-from keyboards.set_menu import set_main_menu
+from lexicon.lexicon_en import LEXICON_EN
+from lexicon.lexicon_ru import LEXICON_RU
 
-# Инициализируем логгер
+# ...
+
+translations = {
+    "default": "ru",
+    "en": LEXICON_EN,
+    "ru": LEXICON_RU,
+}
+
+# Настраиваем базовую конфигурацию логирования
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="[%(asctime)s] #%(levelname)-8s %(filename)s:"
+    "%(lineno)d - %(name)s - %(message)s",
+)
+
+# Инициализируем логгер модуля
 logger = logging.getLogger(__name__)
 
 
 # Функция конфигурирования и запуска бота
-async def main():
-    # Конфигурируем логирование
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(filename)s:%(lineno)d #%(levelname)-8s "
-        "[%(asctime)s] - %(name)s - %(message)s",
-    )
-
-    # Выводим в консоль информацию о начале запуска бота
-    logger.info("Starting bot")
+async def main() -> None:
 
     # Загружаем конфиг в переменную config
     config: Config = load_config()
 
-    # Инициализируем объект хранилища
-    storage = None
-
     # Инициализируем бот и диспетчер
-    bot = Bot(
-        token=config.tg_bot.token,
-        default=DefaultBotProperties(parse_mode=ParseMode.HTML),
-    )
-    dp = Dispatcher(storage=storage)
+    bot = Bot(token=config.tg_bot.token)
+    dp = Dispatcher()
 
-    # Инициализируем другие объекты (пул соединений с БД, кеш и т.п.)
-    # ...
+    # Регистриуем роутеры в диспетчере
+    dp.include_router(user_router)
+    dp.include_router(other_router)
 
-    # Помещаем нужные объекты в workflow_data диспетчера
-    # dp.workflow_data.update(...)
+    # Здесь будем регистрировать миддлвари
+    dp.update.outer_middleware(FirstOuterMiddleware())
 
-    # Настраиваем главное меню бота
-    await set_main_menu(bot)
+    # dp.update.middleware(ThrottlingMiddleware())
+    dp.update.middleware(TranslatorMiddleware())
 
-    # Регистриуем роутеры
-    logger.info("Подключаем роутеры")
-    # ...
+    user_router.callback_query.outer_middleware(SecondOuterMiddleware())
+    other_router.message.outer_middleware(ThirdOuterMiddleware())
+    user_router.message.middleware(FirstInnerMiddleware())
+    user_router.callback_query.middleware(SecondInnerMiddleware())
+    other_router.message.middleware(ThirdInnerMiddleware())
 
-    # Регистрируем миддлвари
-    logger.info("Подключаем миддлвари")
-    # ...
-
-    # Пропускаем накопившиеся апдейты и запускаем polling
-    await bot.delete_webhook(drop_pending_updates=True)
-    await dp.start_polling(bot)
+    # Запускаем polling
+    await dp.start_polling(bot, _translations=translations)
 
 
 asyncio.run(main())
