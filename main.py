@@ -11,9 +11,13 @@ from aiogram.types import (
     PhotoSize,
 )
 
+from config_data.config import Config, load_config
+
+
 # Вместо BOT TOKEN HERE нужно вставить токен вашего бота,
 # полученный у @BotFather
-BOT_TOKEN = "BOT TOKEN HERE"
+config: Config = load_config()
+BOT_TOKEN: str = config.tg_bot.token
 
 # Инициализируем хранилище (создаем экземпляр класса MemoryStorage)
 storage = MemoryStorage()
