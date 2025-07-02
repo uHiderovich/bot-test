@@ -1,0 +1,2 @@
+class LangSG:
+    lang = "lang"

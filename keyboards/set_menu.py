@@ -1,5 +1,5 @@
 from aiogram import Bot
 
 
-async def set_main_menu(bot: Bot):
+async def get_main_menu_commands(bot: Bot):
     pass
