@@ -1,4 +1,4 @@
-WORDS: dict[str, str] = {
+EN: dict[str, str] = {
     "/start": "Hello!\n\nI am the echo bot to demonstrate the work of a relational "
     "database <b>PostgreSQL</b> in conjunction with <code>aiogram</code>!\n\n"
     "If you want, you can send me something or send a command /help",
